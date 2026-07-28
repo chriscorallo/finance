@@ -45,19 +45,30 @@ export async function signInAction(_prevState: LoginActionState, formData: FormD
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
-    await writeLoginEvent({
-      userId: null,
-      email,
-      success: false,
-      failureReason: error?.message ?? "unknown_error",
-      ip,
-      userAgent,
-    });
+    // Audit logging is best-effort — a failure here (env var hiccup,
+    // transient DB issue) must never prevent the real error from reaching
+    // the user, and must never leave the form stuck submitting.
+    try {
+      await writeLoginEvent({
+        userId: null,
+        email,
+        success: false,
+        failureReason: error?.message ?? "unknown_error",
+        ip,
+        userAgent,
+      });
+    } catch {
+      // swallow — the actual auth failure below is what matters
+    }
     return { error: "Invalid email or password." };
   }
 
-  await writeLoginEvent({ userId: data.user.id, email, success: true, ip, userAgent });
-  await writeAuditEvent({ userId: data.user.id, eventType: "login_success", ip, userAgent });
+  try {
+    await writeLoginEvent({ userId: data.user.id, email, success: true, ip, userAgent });
+    await writeAuditEvent({ userId: data.user.id, eventType: "login_success", ip, userAgent });
+  } catch {
+    // swallow — sign-in already succeeded regardless of this outcome
+  }
 
   redirect("/");
 }

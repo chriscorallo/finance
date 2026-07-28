@@ -96,7 +96,16 @@ export function MfaSetupForm() {
       return;
     }
 
-    await logMfaEnrolledAction();
+    // The security-critical step (verifying the code) already succeeded
+    // above. Logging that fact is best-effort — a hiccup here (env var,
+    // network, anything) must never leave the user stuck on this screen
+    // after they've already correctly enrolled.
+    try {
+      await logMfaEnrolledAction();
+    } catch {
+      // swallow — enrollment already succeeded regardless of this outcome
+    }
+
     router.push("/");
     router.refresh();
   }

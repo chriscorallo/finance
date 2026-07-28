@@ -35,7 +35,11 @@ export async function verifyMfaChallengeAction(
   const userAgent = headerList.get("user-agent");
 
   if (error) {
-    await writeAuditEvent({ userId: user.id, eventType: "mfa_challenge_failed", ip, userAgent });
+    try {
+      await writeAuditEvent({ userId: user.id, eventType: "mfa_challenge_failed", ip, userAgent });
+    } catch {
+      // swallow — audit logging is best-effort, must never block returning the real error
+    }
     return { error: "That code didn't work. Check the time on your device and try again." };
   }
 
