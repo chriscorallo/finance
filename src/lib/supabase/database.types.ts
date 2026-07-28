@@ -19,11 +19,30 @@ type GenericTable = {
   Relationships: [];
 };
 
+export const ACCOUNT_TYPES = [
+  "checking",
+  "savings",
+  "money_market",
+  "credit_card",
+  "loan_personal",
+  "loan_student",
+  "loan_mortgage",
+  "loan_auto",
+  "brokerage",
+  "retirement",
+  "crypto",
+  "real_estate",
+  "vehicle",
+  "business_equity",
+  "other_asset",
+  "other_liability",
+] as const;
+export type AccountType = (typeof ACCOUNT_TYPES)[number];
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used via `typeof PHASE_2_PLUS_TABLES` below, not as a value
 const PHASE_2_PLUS_TABLES = [
   "connected_institutions",
   "encrypted_provider_tokens",
-  "accounts",
   "account_balances",
   "transaction_categories",
   "transaction_category_rules",
@@ -133,6 +152,68 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["audit_events"]["Insert"]>;
+        Relationships: [];
+      };
+      accounts: {
+        Row: {
+          id: string;
+          user_id: string;
+          institution_id: string | null;
+          provider_account_id: string | null;
+          name: string;
+          official_name: string | null;
+          account_type: AccountType;
+          account_subtype: string | null;
+          mask: string | null;
+          current_balance_cents: number;
+          available_balance_cents: number | null;
+          currency: string;
+          // numeric(6,4) — PostgREST returns numeric columns as strings to
+          // avoid float precision loss; parse with Number() when needed.
+          interest_rate: string | null;
+          credit_limit_cents: number | null;
+          minimum_payment_cents: number | null;
+          payment_due_day: number | null;
+          is_manual: boolean;
+          include_in_net_worth: boolean;
+          include_in_liquid_net_worth: boolean;
+          include_in_spending: boolean;
+          sync_status: "ok" | "error" | "stale" | "never_synced";
+          last_synced_at: string | null;
+          notes: string | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          institution_id?: string | null;
+          provider_account_id?: string | null;
+          name: string;
+          official_name?: string | null;
+          account_type: AccountType;
+          account_subtype?: string | null;
+          mask?: string | null;
+          current_balance_cents?: number;
+          available_balance_cents?: number | null;
+          currency?: string;
+          interest_rate?: string | null;
+          credit_limit_cents?: number | null;
+          minimum_payment_cents?: number | null;
+          payment_due_day?: number | null;
+          is_manual?: boolean;
+          include_in_net_worth?: boolean;
+          include_in_liquid_net_worth?: boolean;
+          include_in_spending?: boolean;
+          sync_status?: "ok" | "error" | "stale" | "never_synced";
+          last_synced_at?: string | null;
+          notes?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["accounts"]["Insert"]>;
         Relationships: [];
       };
     } & { [K in (typeof PHASE_2_PLUS_TABLES)[number]]: GenericTable };

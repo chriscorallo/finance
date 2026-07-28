@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Plus, Eye, EyeOff, RefreshCw, CircleCheck, LogOut, Sun, Moon, Laptop } from "lucide-react";
+import { Search, Plus, Eye, EyeOff, RefreshCw, CircleCheck, LogOut, Sun, Moon, Laptop, UserRound } from "lucide-react";
 import { useTheme } from "next-themes";
 import { usePrivacyMode } from "@/components/privacy/privacy-mode-provider";
 import { signOutAction } from "@/app/(app)/sign-out-action";
+import { MobileNav } from "@/components/app-shell/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
@@ -31,14 +32,26 @@ export function Topbar({ userEmail }: { userEmail: string }) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   return (
-    <header className="flex h-14 items-center gap-2 border-b bg-background px-4">
+    <header className="flex h-14 items-center gap-2 border-b bg-background px-2 sm:px-4">
+      <MobileNav />
+
       <Button
         variant="outline"
-        className="w-full max-w-sm justify-start gap-2 text-muted-foreground sm:w-64"
+        size="icon"
+        className="shrink-0 text-muted-foreground sm:hidden"
+        aria-label="Search"
         onClick={() => setSearchOpen(true)}
       >
         <Search className="size-4" aria-hidden="true" />
-        Search…
+      </Button>
+
+      <Button
+        variant="outline"
+        className="hidden min-w-0 flex-1 justify-start gap-2 text-muted-foreground sm:flex sm:w-64 sm:flex-none"
+        onClick={() => setSearchOpen(true)}
+      >
+        <Search className="size-4 shrink-0" aria-hidden="true" />
+        <span className="truncate">Search…</span>
       </Button>
 
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
@@ -70,13 +83,13 @@ export function Topbar({ userEmail }: { userEmail: string }) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-0.5 sm:gap-1">
         <Tooltip>
           <TooltipTrigger
             render={
-              <span className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground">
-                <CircleCheck className="size-3.5 text-positive" aria-hidden="true" />
-                No accounts connected
+              <span className="flex items-center gap-1.5 rounded-md px-1.5 py-1.5 text-xs text-muted-foreground sm:px-2">
+                <CircleCheck className="size-3.5 shrink-0 text-positive" aria-hidden="true" />
+                <span className="hidden md:inline">No accounts connected</span>
               </span>
             }
           />
@@ -86,7 +99,7 @@ export function Topbar({ userEmail }: { userEmail: string }) {
         <Tooltip>
           <TooltipTrigger
             render={
-              <Button variant="ghost" size="icon" aria-label="Data health" disabled>
+              <Button variant="ghost" size="icon" aria-label="Data health" disabled className="hidden sm:inline-flex">
                 <RefreshCw className="size-4" />
               </Button>
             }
@@ -129,7 +142,29 @@ export function Topbar({ userEmail }: { userEmail: string }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" className="gap-2 pl-2 pr-3">
+              <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Account menu">
+                <UserRound className="size-4" />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel className="max-w-56 truncate font-normal text-muted-foreground">
+              {userEmail}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/settings/security">Security</Link>} />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => void signOutAction()} variant="destructive">
+              <LogOut className="size-4" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" className="hidden gap-2 pl-2 pr-3 sm:flex">
                 <span className="max-w-40 truncate text-sm">{userEmail}</span>
               </Button>
             }

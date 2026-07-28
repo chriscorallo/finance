@@ -1,0 +1,36 @@
+import {
+  Wallet,
+  PiggyBank,
+  Landmark,
+  CreditCard,
+  HandCoins,
+  GraduationCap,
+  Home,
+  Car,
+  TrendingUp,
+  Bitcoin,
+  Briefcase,
+  CircleDollarSign,
+  CircleMinus,
+  type LucideIcon,
+} from "lucide-react";
+import type { AccountType } from "@/lib/supabase/database.types";
+
+export const ACCOUNT_TYPE_META: Record<AccountType, { label: string; icon: LucideIcon }> = {
+  checking: { label: "Checking", icon: Wallet },
+  savings: { label: "Savings", icon: PiggyBank },
+  money_market: { label: "Money Market", icon: Landmark },
+  credit_card: { label: "Credit Card", icon: CreditCard },
+  loan_personal: { label: "Personal Loan", icon: HandCoins },
+  loan_student: { label: "Student Loan", icon: GraduationCap },
+  loan_mortgage: { label: "Mortgage", icon: Home },
+  loan_auto: { label: "Auto Loan", icon: Car },
+  brokerage: { label: "Brokerage", icon: TrendingUp },
+  retirement: { label: "Retirement", icon: PiggyBank },
+  crypto: { label: "Cryptocurrency", icon: Bitcoin },
+  real_estate: { label: "Real Estate", icon: Home },
+  vehicle: { label: "Vehicle", icon: Car },
+  business_equity: { label: "Business Equity", icon: Briefcase },
+  other_asset: { label: "Other Asset", icon: CircleDollarSign },
+  other_liability: { label: "Other Liability", icon: CircleMinus },
+};
