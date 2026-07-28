@@ -1,0 +1,2 @@
+pnpm run secret-scan
+pnpm run typecheck
