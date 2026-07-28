@@ -10,13 +10,19 @@ const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
 });
 
+// The Vercel Marketplace Supabase integration prefixes injected vars with
+// the storage resource's name (here, the "finance" Supabase resource
+// connected to this project) to avoid collisions if more than one Supabase
+// project were ever connected — it does not overwrite plain-named vars that
+// already exist. Accept both the plain names and this resource's prefixed
+// names, and both the legacy ("anon key") and current ("publishable key")
+// Supabase naming, rather than requiring a manual rename in the dashboard.
 export const clientEnv = clientSchema.parse({
-  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  // The Vercel Marketplace Supabase integration has used both the legacy
-  // "anon key" name and the newer "publishable key" name across its
-  // rollout — accept either rather than requiring the user to check and
-  // rename what the integration injected.
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.NEXT_PUBLIC_finance_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_finance_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.NEXT_PUBLIC_finance_SUPABASE_ANON_KEY,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 });

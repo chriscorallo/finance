@@ -26,10 +26,13 @@ let cached: z.infer<typeof serverSchema> | null = null;
 export function serverEnv() {
   if (!cached) {
     cached = serverSchema.parse({
-      // Accept both the legacy "service_role key" name and the newer
-      // "secret key" name — the Vercel Marketplace Supabase integration has
-      // used both across its rollout.
-      SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY,
+      // Same resource-prefix + legacy/current naming fallback as
+      // env.client.ts — see the comment there.
+      SUPABASE_SECRET_KEY:
+        process.env.SUPABASE_SECRET_KEY ??
+        process.env.SUPABASE_SERVICE_ROLE_KEY ??
+        process.env.finance_SUPABASE_SECRET_KEY ??
+        process.env.finance_SUPABASE_SERVICE_ROLE_KEY,
       PROVIDER_TOKEN_ENCRYPTION_KEY: process.env.PROVIDER_TOKEN_ENCRYPTION_KEY,
       OWNER_EMAIL: process.env.OWNER_EMAIL,
       PLAID_ENV: process.env.PLAID_ENV,
