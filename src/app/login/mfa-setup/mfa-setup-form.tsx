@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/client";
 import { logMfaEnrolledAction } from "@/app/login/mfa-setup/actions";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type EnrollState = { factorId: string; qrCodeDataUri: string; secret: string };
+type EnrollState = { factorId: string; qrCodePngDataUri: string; secret: string };
 
 export function MfaSetupForm() {
   const router = useRouter();
@@ -26,17 +27,28 @@ export function MfaSetupForm() {
 
     supabase.auth.mfa
       .enroll({ factorType: "totp", friendlyName: "Authenticator app" })
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (cancelled) return;
         if (error || !data) {
           setEnrollError(error?.message ?? "Could not start MFA enrollment.");
           return;
         }
-        setEnrollment({
-          factorId: data.id,
-          qrCodeDataUri: `data:image/svg+xml;utf-8,${encodeURIComponent(data.totp.qr_code)}`,
-          secret: data.totp.secret,
-        });
+
+        // Generate the QR code ourselves from the otpauth:// URI rather than
+        // relying on Supabase's server-rendered SVG string embedded as a
+        // data: URI — that produced a QR code that silently failed to
+        // render for some users. `qrcode` is a well-established library;
+        // toDataURL() always returns a valid PNG data URI.
+        try {
+          const qrCodePngDataUri = await QRCode.toDataURL(data.totp.uri, { width: 256, margin: 1 });
+          if (cancelled) return;
+          setEnrollment({ factorId: data.id, qrCodePngDataUri, secret: data.totp.secret });
+        } catch {
+          if (cancelled) return;
+          // The secret is still shown for manual entry even if local QR
+          // generation somehow fails, so enrollment can still complete.
+          setEnrollment({ factorId: data.id, qrCodePngDataUri: "", secret: data.totp.secret });
+        }
       });
 
     return () => {
@@ -75,7 +87,7 @@ export function MfaSetupForm() {
   if (!enrollment) {
     return (
       <div className="space-y-4">
-        <Skeleton className="mx-auto h-48 w-48" />
+        <Skeleton className="mx-auto h-64 w-64" />
         <Skeleton className="h-10 w-full" />
       </div>
     );
@@ -84,8 +96,16 @@ export function MfaSetupForm() {
   return (
     <form onSubmit={handleVerify} className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-3 rounded-lg border bg-card p-4">
-        {/* eslint-disable-next-line @next/next/no-img-element -- data: URI, next/image can't optimize this */}
-        <img src={enrollment.qrCodeDataUri} alt="Authenticator QR code" width={192} height={192} />
+        {enrollment.qrCodePngDataUri ? (
+          // eslint-disable-next-line @next/next/no-img-element -- data: URI, next/image can't optimize this
+          <img
+            src={enrollment.qrCodePngDataUri}
+            alt="Authenticator QR code"
+            width={256}
+            height={256}
+            className="rounded-md"
+          />
+        ) : null}
         <p className="text-center text-xs text-muted-foreground">
           Can&apos;t scan it? Enter this code manually:
         </p>
