@@ -25,31 +25,56 @@ export function MfaSetupForm() {
     let cancelled = false;
     const supabase = createClient();
 
-    supabase.auth.mfa
-      .enroll({ factorType: "totp", friendlyName: "Authenticator app" })
-      .then(async ({ data, error }) => {
-        if (cancelled) return;
-        if (error || !data) {
-          setEnrollError(error?.message ?? "Could not start MFA enrollment.");
-          return;
+    async function run() {
+      // Every mount used to call enroll() unconditionally, which creates a
+      // brand-new factor (new secret, new QR) each time — including on a
+      // page refresh or a redeploy landing mid-setup. Any secret already
+      // saved in an authenticator app from a previous mount then belonged
+      // to an abandoned factor and could never verify. Clean up any
+      // unverified TOTP factor from a previous attempt first, so there is
+      // always exactly one live factor and the secret shown is always the
+      // one that will actually work.
+      // listFactors()'s per-type `totp` array only ever contains *verified*
+      // factors (that's how the SDK types it) — unverified ones only show
+      // up in `all`. Filter there instead, or this cleanup silently never
+      // finds anything to clean up.
+      const { data: existing } = await supabase.auth.mfa.listFactors();
+      for (const factor of existing?.all ?? []) {
+        if (factor.factor_type === "totp" && factor.status === "unverified") {
+          await supabase.auth.mfa.unenroll({ factorId: factor.id });
         }
+      }
+      if (cancelled) return;
 
-        // Generate the QR code ourselves from the otpauth:// URI rather than
-        // relying on Supabase's server-rendered SVG string embedded as a
-        // data: URI — that produced a QR code that silently failed to
-        // render for some users. `qrcode` is a well-established library;
-        // toDataURL() always returns a valid PNG data URI.
-        try {
-          const qrCodePngDataUri = await QRCode.toDataURL(data.totp.uri, { width: 256, margin: 1 });
-          if (cancelled) return;
-          setEnrollment({ factorId: data.id, qrCodePngDataUri, secret: data.totp.secret });
-        } catch {
-          if (cancelled) return;
-          // The secret is still shown for manual entry even if local QR
-          // generation somehow fails, so enrollment can still complete.
-          setEnrollment({ factorId: data.id, qrCodePngDataUri: "", secret: data.totp.secret });
-        }
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: "totp",
+        friendlyName: "Authenticator app",
       });
+      if (cancelled) return;
+
+      if (error || !data) {
+        setEnrollError(error?.message ?? "Could not start MFA enrollment.");
+        return;
+      }
+
+      // Generate the QR code ourselves from the otpauth:// URI rather than
+      // relying on Supabase's server-rendered SVG string embedded as a
+      // data: URI — that produced a QR code that silently failed to render
+      // for some users. `qrcode` is a well-established library; toDataURL()
+      // always returns a valid PNG data URI.
+      try {
+        const qrCodePngDataUri = await QRCode.toDataURL(data.totp.uri, { width: 256, margin: 1 });
+        if (cancelled) return;
+        setEnrollment({ factorId: data.id, qrCodePngDataUri, secret: data.totp.secret });
+      } catch {
+        if (cancelled) return;
+        // The secret is still shown for manual entry even if local QR
+        // generation somehow fails, so enrollment can still complete.
+        setEnrollment({ factorId: data.id, qrCodePngDataUri: "", secret: data.totp.secret });
+      }
+    }
+
+    run();
 
     return () => {
       cancelled = true;
