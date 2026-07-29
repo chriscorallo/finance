@@ -7,21 +7,32 @@ import type { AccountType } from "@/lib/supabase/database.types";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AddAccountDialog } from "@/app/(app)/accounts/add-account-dialog";
 import { AccountRow } from "@/app/(app)/accounts/account-row";
+import { ConnectBankButton } from "@/app/(app)/accounts/connect-bank-button";
+import { InstitutionRow } from "@/app/(app)/accounts/institution-row";
 
 export default async function AccountsPage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const { data: accounts } = await supabase
-    .from("accounts")
-    .select(
-      "id, name, account_type, mask, current_balance_cents, include_in_net_worth, include_in_liquid_net_worth",
-    )
-    .eq("user_id", user.id)
-    .is("archived_at", null)
-    .order("created_at", { ascending: true });
+  const [{ data: accounts }, { data: institutions }] = await Promise.all([
+    supabase
+      .from("accounts")
+      .select(
+        "id, name, account_type, mask, current_balance_cents, include_in_net_worth, include_in_liquid_net_worth",
+      )
+      .eq("user_id", user.id)
+      .is("archived_at", null)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("connected_institutions")
+      .select("id, name, status, last_successful_sync_at, error_message")
+      .eq("user_id", user.id)
+      .neq("status", "disconnected")
+      .order("created_at", { ascending: true }),
+  ]);
 
   const rows = accounts ?? [];
+  const institutionRows = institutions ?? [];
 
   const netWorth = calculateNetWorth(
     rows.map((row) => ({
@@ -37,10 +48,33 @@ export default async function AccountsPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-semibold">Accounts</h1>
-          <p className="text-sm text-muted-foreground">Manually tracked balances — Plaid sync arrives in a later phase.</p>
+          <p className="text-sm text-muted-foreground">Connect a real bank, or track any account manually.</p>
         </div>
-        <AddAccountDialog />
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <ConnectBankButton />
+          <AddAccountDialog />
+        </div>
       </div>
+
+      {institutionRows.length > 0 ? (
+        <div className="flex flex-col gap-3">
+          <h2 className="font-heading text-base font-medium">Connected banks</h2>
+          <Card className="py-0">
+            {institutionRows.map((institution) => (
+              <InstitutionRow
+                key={institution.id}
+                institution={{
+                  id: institution.id,
+                  name: institution.name,
+                  status: institution.status,
+                  lastSuccessfulSyncAt: institution.last_successful_sync_at,
+                  errorMessage: institution.error_message,
+                }}
+              />
+            ))}
+          </Card>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Card size="sm">

@@ -41,8 +41,6 @@ export type AccountType = (typeof ACCOUNT_TYPES)[number];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used via `typeof PHASE_2_PLUS_TABLES` below, not as a value
 const PHASE_2_PLUS_TABLES = [
-  "connected_institutions",
-  "encrypted_provider_tokens",
   "account_balances",
   "transaction_categories",
   "transaction_category_rules",
@@ -152,6 +150,68 @@ export interface Database {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["audit_events"]["Insert"]>;
+        Relationships: [];
+      };
+      connected_institutions: {
+        Row: {
+          id: string;
+          user_id: string;
+          provider: string;
+          provider_institution_id: string | null;
+          name: string;
+          logo_url: string | null;
+          status: "active" | "error" | "disconnected";
+          last_successful_sync_at: string | null;
+          last_attempted_sync_at: string | null;
+          error_code: string | null;
+          error_message: string | null;
+          disconnected_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider?: string;
+          provider_institution_id?: string | null;
+          name: string;
+          logo_url?: string | null;
+          status?: "active" | "error" | "disconnected";
+          last_successful_sync_at?: string | null;
+          last_attempted_sync_at?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          disconnected_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["connected_institutions"]["Insert"]>;
+        Relationships: [];
+      };
+      encrypted_provider_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          institution_id: string;
+          provider: string;
+          encrypted_access_token: string;
+          encryption_key_version: number;
+          rotated_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          institution_id: string;
+          provider?: string;
+          encrypted_access_token: string;
+          encryption_key_version?: number;
+          rotated_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["encrypted_provider_tokens"]["Insert"]>;
         Relationships: [];
       };
       accounts: {

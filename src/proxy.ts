@@ -36,19 +36,22 @@ const isDev = process.env.NODE_ENV === "development";
  * page to https:// and fail with ERR_SSL_PROTOCOL_ERROR — confirmed by
  * actually loading the app, not by inspecting the policy string.
  *
- * When Plaid Link ships (Phase 3), this policy needs `script-src
- * https://cdn.plaid.com`, `connect-src https://production.plaid.com
- * https://sandbox.plaid.com`, and `frame-src https://cdn.plaid.com` added.
+ * Plaid Link (Phase 3) needs `script-src https://cdn.plaid.com` (the Link
+ * loader), `connect-src https://production.plaid.com
+ * https://sandbox.plaid.com https://development.plaid.com` (Link's own
+ * network calls, made directly from the browser during the connect flow —
+ * never used for anything token-related, which stays server-only), and
+ * `frame-src https://cdn.plaid.com` (Link renders in an iframe).
  */
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://cdn.plaid.com${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
-    `connect-src 'self' ${clientEnv.NEXT_PUBLIC_SUPABASE_URL}${isDev ? " ws:" : ""}`,
-    "frame-src 'none'",
+    `connect-src 'self' ${clientEnv.NEXT_PUBLIC_SUPABASE_URL} https://production.plaid.com https://sandbox.plaid.com https://development.plaid.com${isDev ? " ws:" : ""}`,
+    "frame-src https://cdn.plaid.com",
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",
