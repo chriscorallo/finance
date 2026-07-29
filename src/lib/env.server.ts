@@ -18,6 +18,11 @@ const serverSchema = z.object({
   PLAID_SANDBOX_SECRET: z.string().min(1).optional(),
   PLAID_DEVELOPMENT_SECRET: z.string().min(1).optional(),
   PLAID_PRODUCTION_SECRET: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_CLIENT_SECRET: z.string().min(1).optional(),
+  MICROSOFT_CALENDAR_CLIENT_ID: z.string().min(1).optional(),
+  MICROSOFT_CALENDAR_CLIENT_SECRET: z.string().min(1).optional(),
+  MICROSOFT_CALENDAR_TENANT: z.string().min(1).default("common"),
 });
 
 let cached: z.infer<typeof serverSchema> | null = null;
@@ -40,6 +45,11 @@ export function serverEnv() {
       PLAID_SANDBOX_SECRET: process.env.PLAID_SANDBOX_SECRET,
       PLAID_DEVELOPMENT_SECRET: process.env.PLAID_DEVELOPMENT_SECRET,
       PLAID_PRODUCTION_SECRET: process.env.PLAID_PRODUCTION_SECRET,
+      GOOGLE_CALENDAR_CLIENT_ID: process.env.GOOGLE_CALENDAR_CLIENT_ID,
+      GOOGLE_CALENDAR_CLIENT_SECRET: process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
+      MICROSOFT_CALENDAR_CLIENT_ID: process.env.MICROSOFT_CALENDAR_CLIENT_ID,
+      MICROSOFT_CALENDAR_CLIENT_SECRET: process.env.MICROSOFT_CALENDAR_CLIENT_SECRET,
+      MICROSOFT_CALENDAR_TENANT: process.env.MICROSOFT_CALENDAR_TENANT,
     });
   }
   return cached;

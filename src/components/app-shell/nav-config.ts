@@ -4,6 +4,7 @@ import {
   Receipt,
   Repeat,
   CalendarDays,
+  CalendarClock,
   PiggyBank,
   Wallet,
   LineChart,
@@ -44,3 +45,10 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Security", href: "/settings/security", icon: Lock },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
+
+/**
+ * A second, non-finance section of the app (calendar aggregation, and
+ * whatever else joins it later) — rendered as its own group, separated
+ * from the finance nav, in Sidebar and MobileNav.
+ */
+export const SECONDARY_NAV_ITEMS: NavItem[] = [{ label: "Schedule", href: "/schedule", icon: CalendarClock }];

@@ -4,13 +4,54 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ChevronsLeft, ChevronsRight } from "lucide-react";
-import { NAV_ITEMS } from "@/components/app-shell/nav-config";
+import { NAV_ITEMS, SECONDARY_NAV_ITEMS, type NavItem } from "@/components/app-shell/nav-config";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function NavList({ items, pathname, collapsed }: { items: NavItem[]; pathname: string; collapsed: boolean }) {
+  return (
+    <ul className="flex flex-col gap-0.5 px-2">
+      {items.map((item) => {
+        const active = isActive(pathname, item.href);
+        const link = (
+          <Link
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm outline-none transition-colors",
+              "focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+              active
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              collapsed && "justify-center px-0",
+            )}
+          >
+            <item.icon className="size-4 shrink-0" aria-hidden="true" />
+            {!collapsed && <span className="truncate">{item.label}</span>}
+          </Link>
+        );
+
+        return (
+          <li key={item.href}>
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger render={link} />
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
+            ) : (
+              link
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function Sidebar() {
@@ -29,41 +70,9 @@ export function Sidebar() {
       </div>
 
       <nav aria-label="Primary" className="flex-1 overflow-y-auto py-2">
-        <ul className="flex flex-col gap-0.5 px-2">
-          {NAV_ITEMS.map((item) => {
-            const active = isActive(pathname, item.href);
-            const link = (
-              <Link
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm outline-none transition-colors",
-                  "focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  collapsed && "justify-center px-0",
-                )}
-              >
-                <item.icon className="size-4 shrink-0" aria-hidden="true" />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-              </Link>
-            );
-
-            return (
-              <li key={item.href}>
-                {collapsed ? (
-                  <Tooltip>
-                    <TooltipTrigger render={link} />
-                    <TooltipContent side="right">{item.label}</TooltipContent>
-                  </Tooltip>
-                ) : (
-                  link
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <NavList items={NAV_ITEMS} pathname={pathname} collapsed={collapsed} />
+        <Separator className="my-2" />
+        <NavList items={SECONDARY_NAV_ITEMS} pathname={pathname} collapsed={collapsed} />
       </nav>
 
       <div className="border-t p-2">

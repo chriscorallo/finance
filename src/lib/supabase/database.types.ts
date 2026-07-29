@@ -276,6 +276,100 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["accounts"]["Insert"]>;
         Relationships: [];
       };
+      calendar_connections: {
+        Row: {
+          id: string;
+          user_id: string;
+          provider: "google" | "microsoft" | "apple";
+          provider_account_email: string | null;
+          display_name: string | null;
+          status: "active" | "error" | "disconnected";
+          last_successful_sync_at: string | null;
+          last_attempted_sync_at: string | null;
+          error_message: string | null;
+          disconnected_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider: "google" | "microsoft" | "apple";
+          provider_account_email?: string | null;
+          display_name?: string | null;
+          status?: "active" | "error" | "disconnected";
+          last_successful_sync_at?: string | null;
+          last_attempted_sync_at?: string | null;
+          error_message?: string | null;
+          disconnected_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["calendar_connections"]["Insert"]>;
+        Relationships: [];
+      };
+      encrypted_calendar_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          connection_id: string;
+          provider: "google" | "microsoft" | "apple";
+          encrypted_access_token: string;
+          encrypted_refresh_token: string | null;
+          access_token_expires_at: string | null;
+          encryption_key_version: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          connection_id: string;
+          provider: "google" | "microsoft" | "apple";
+          encrypted_access_token: string;
+          encrypted_refresh_token?: string | null;
+          access_token_expires_at?: string | null;
+          encryption_key_version?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["encrypted_calendar_tokens"]["Insert"]>;
+        Relationships: [];
+      };
+      synced_calendar_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          connection_id: string;
+          provider_event_id: string;
+          title: string;
+          description: string | null;
+          location: string | null;
+          start_at: string;
+          end_at: string;
+          all_day: boolean;
+          source: "sync" | "app_created";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          connection_id: string;
+          provider_event_id: string;
+          title: string;
+          description?: string | null;
+          location?: string | null;
+          start_at: string;
+          end_at: string;
+          all_day?: boolean;
+          source?: "sync" | "app_created";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["synced_calendar_events"]["Insert"]>;
+        Relationships: [];
+      };
     } & { [K in (typeof PHASE_2_PLUS_TABLES)[number]]: GenericTable };
     Views: Record<string, never>;
     Functions: {
